@@ -2,9 +2,20 @@
     Layout = null;
 }
 
-<div>
+<div class="container">
     <h2>
         Customers Index
     </h2>
-        <a href="/">Dash Board</a>
+    <a href="/">Dash Board</a>
+
+    <div class="row">
+        <div class=".col-lg-12">
+            {{SelectCustomer}} - {{SelectedPrice}}
+            <input type="hidden" class="Select2" style="width: 300px" data-dataurl="/Home/GetSelect2Data" ng-model="SelectCustomer" />
+            <input type="text" class="CurrencyInput" data-mdec="3" ng-model="SelectedPrice" />
+
+            {{SelectedDate}}
+            <input type="text" class="DatePicker" ng-model="SelectedDate" data-date="2014/02/01 21:09:00" data-pickTime="false" />
+        </div>
+    </div>
 </div>

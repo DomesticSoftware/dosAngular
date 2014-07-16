@@ -26,5 +26,21 @@ namespace MvcAppBasic.Controllers
             return View();
         }
 
+        public ActionResult GetSelect2Data(String term)
+        {
+            List<Customers> Data = new List<Customers>();
+            Data.Add(new Customers() { Id = 1, eMail = "antonis_saridakis@hotmail.com", UserName = "asaridakis" });
+            Data.Add(new Customers() { Id = 2, eMail = "antonis_saridakis@hotmail.com2", UserName = "asaridakis2" });
+            
+            return Json(Data.Select(f => new { id = f.Id, text = f.eMail }), JsonRequestBehavior.AllowGet);            
+        }
+
+    }
+
+    public class Customers
+    {
+        public Int32 Id { get; set; }
+        public String eMail { get; set; }
+        public String UserName { get; set; }
     }
 }

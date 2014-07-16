@@ -1,5 +1,4 @@
-﻿debugger;
-var angularJSApp = angular.module('angularJSApp', ['ngRoute']);
+﻿var angularJSApp = angular.module('angularJSApp', ['ngRoute']);
 
 
 angularJSApp.config(function ($locationProvider, $routeProvider) {
@@ -39,6 +38,8 @@ angularJSApp.controller('homeCtrl', function ($scope) {
 });
 
 angularJSApp.controller('CustomersIndexCtrl', function ($scope) {
+    $scope.SelectCustomer = null
+    $scope.SelectedDate = new Date();
     //debugger;
 });
 

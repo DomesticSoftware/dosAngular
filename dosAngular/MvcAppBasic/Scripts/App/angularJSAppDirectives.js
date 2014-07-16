@@ -51,12 +51,13 @@ angularJSApp.directive('CurrencyInput', function ($parse) {
         //template: '<input type="text" />',
         link: function ($scope, $ellement, $attr) {
             //var obj = $($ellement).find('input');
-
+           
             //$($ellement).autoNumeric('init', { aSep: '.', aDec: ',', aSign: '€ ', mDec: 2 });
 
             if ($($ellement).is("input[type=text]")) {
-
-                $($ellement).autoNumeric('init', { aSep: '.', aDec: ',', aSign: '€ ', mDec: 2 });
+                
+                
+                $($ellement).autoNumeric('init', { aSep: '.', aDec: ',', aSign: '€ ', mDec: $attr.mdec == null ? 2 : $attr.mdec });
                 $($ellement).addClass($attr.inputClass);
 
 
@@ -93,6 +94,7 @@ angularJSApp.directive('Select2', function ($parse) {
         //                    '</div>' +
         //                '</div>',
         link: function ($scope, $ellement, $attr) {
+            
             $scope.Page = null;
             $scope.TotalPages = null;
 
@@ -109,6 +111,21 @@ angularJSApp.directive('Select2', function ($parse) {
             }
 
             if ($($ellement).is("input[type=hidden]")) {
+                
+
+                obj.select2({
+                    placeholder: $attr.placeholder, //'Type to search for Product Services...',
+                    minimumInputLength: $attr.minimuminputlength,
+                    allowClear: $attr.allowclear,
+                    multiple: $attr.multiple,
+                    data: { results: [] },
+                    createSearchChoice: function (term, data) {
+                        if ($attr.createSearchChoice == true && ($(data).filter(function () { return this.text.localeCompare(term) === 0; }).length === 0)) {
+                            return { id: term, text: term };
+                        }
+                    }
+                });
+                
                 var postify = { term: null };
 
                 var data = $attr.data != null ? $.isPlainObject($attr.data) ? $attr.data : $.parseJSON($attr.data) : null;
@@ -116,9 +133,10 @@ angularJSApp.directive('Select2', function ($parse) {
                 if (data != null) {
                     $.extend(postify, data);
                 }
-
+                
                 if ($attr.dataurl != null) {
-                    $.get($attr.dataurl, $.postify(postify), function (response) {
+                    
+                    $.get($attr.dataurl, postify, function (response) {
                         obj.select2({
                             placeholder: $attr.placeholder, //'Type to search for Product Services...',
                             minimumInputLength: $attr.minimuminputlength,
@@ -217,7 +235,7 @@ angularJSApp.directive('Select2', function ($parse) {
                         Αντί για αυτο το παραπάνω, καλούμε την $parse με παράμετρο ότι εχει μέσα το attribute ngModel (που ειναι η μεταβλητή που κάνει bind ο χρήστης),
                         αυτή μας επιστρέφει μια function assign, στην οποία περνάμε το PARENT SCOPE (γιατί εδώ έχουμε private Scope), και τα δεδομένα που θέλουμε!
                     */
-
+                    
                     if ($attr.multiple == true || $attr.multiple == 'true') {
                         var values = [];
 
@@ -225,10 +243,12 @@ angularJSApp.directive('Select2', function ($parse) {
                             values.push(value.id);
                         });
 
-                        $parse($attr.ngModel).assign($scope.$parent, values); //$($scope.Select2).select2('data'));
+                        if ($attr.ngModel != null) $parse($attr.ngModel).assign($scope.$parent, values); //$($scope.Select2).select2('data'));
                     }
                     else {
-                        $parse($attr.ngModel).assign($scope.$parent, $($scope.Select2).select2('data') != null ? $($scope.Select2).select2('data').id : null);
+                        if ($attr.ngModel != null) {
+                            $parse($attr.ngModel).assign($scope.$parent, $($scope.Select2).select2('data') != null ? $($scope.Select2).select2('data').id : null);
+                        }
                         if ($attr.ngModelobj != null) {
                             $parse($attr.ngModelobj).assign($scope.$parent, $($scope.Select2).select2('data') != null ? $($scope.Select2).select2('data') : null);
                         }
@@ -303,55 +323,48 @@ angularJSApp.directive('DatePicker', function ($parse) {
             //    //Private Scope
             //    Pager: '=pager',
             //    GetItems: '&ongetitems'
-            dateFormat: '@dataformat'
+            dateFormat: '@dataformat'            
         },
         transclude: false,
         replace: true,
-        template: '<div class="input-append date" data-date="" data-date-format="dd/mm/yyyy">' +
-                        '<input size="16" type="text"> ' +
-                        '<span class="add-on"><i class="icon-th"></i></span>' +
-                    '</div>',
+        //template: '<div class="input-append date" data-date="" data-date-format="dd/mm/yyyy">' +
+        //                '<input size="16" type="text"> ' +
+        //                '<span class="add-on"><i class="icon-th"></i></span>' +
+        //            '</div>',
+        template: '<div class="input-group date">' +
+                    '<input type="text" class="form-control" />' +
+                    '<span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span>' + 
+                    '</span>' +
+                '</div>',
         controller: ['$scope', '$http', function ($scope, $http) {
         }],
         link: function ($scope, $ellement, $attr) {
+            //http://eonasdan.github.io/bootstrap-datetimepicker/#events
 
-            $($ellement).find('input[type=text]').bind('keyup', function (ev) {
-                //console.log('Change Date on text change ' + ev);
-
-                if ($(ev.target).val().trim() == '')
-                    $scope.$apply(function () {
-                        $scope.SelectedDate = null;
-                        $parse($attr.ngModel).assign($scope.$parent, $scope.SelectedDate);
-                    });
-
-            });
-
-            $($ellement).datepicker().on('changeDate', function (ev) {
-                //var ll = moment($scope.datepicker.datepicker().data('datepicker').date).utc().format();                
-                //console.log('Change Date ' + ev);
-                $scope.SelectedDate = ev.date;
-                $scope.$apply(function () {
-                    $parse($attr.ngModel).assign($scope.$parent, moment(ev.date).utc().format());
-                });
+            debugger;
+            $($ellement).datetimepicker({
+                language: 'el',
+                defaultDate: moment(new Date($attr.date)).format(),
+                pickTime: $attr.picktime
             });
 
             $scope.$parent.$watch($attr.ngModel, function (value) {
-                if ($scope.SelectedDate == null) {
-                    //var date = moment(value).format($attr.format != null ? $attr.format : 'DD/MM/YYYY');
-                    //date = moment(value);
-                    if (value != null) {
-                        $scope.SelectedDate = moment(value)._isUTC ? moment(value) : moment(value).utc();
-                        $parse($attr.ngModel).assign($scope.$parent, moment($scope.SelectedDate).utc().format());
-                    }
+
+                debugger;
+                if (new Date($($ellement).data("DateTimePicker").getDate()).toString() != new Date(value).toString()) {
+                    $scope.SelectedDate = value;
+                    $($ellement).data("DateTimePicker").setDate(moment(value).format());
                 }
+               
+            });
 
-                //console.log('Value of DatePicker Element: ' + value); //, Error().stack);
-                //var date = moment(moment(value).format($attr.format != null ? $attr.format : 'DD/MM/YYYY')).utc().format();
-                //var date = moment(value).format($attr.format != null ? $attr.format : 'DD/MM/YYYY');
-                //date = moment(value).utc();
-
-                if ($scope.SelectedDate != null) $($ellement).datepicker('setValue', $scope.SelectedDate);
-                //obj.datepicker('setValue', moment(value).format($attr.format != null ? $attr.format : 'DD/MM/YYYY'));
+            $($ellement).on('dp.change', function (ev) {
+                if (new Date(ev.date).toString() == new Date($scope.SelectedDate).toString())
+                    return;
+                
+                $scope.$apply(function () {
+                    $parse($attr.ngModel).assign($scope.$parent, moment(ev.date).format());
+                });
             });
         }
     }
