@@ -341,7 +341,7 @@ angularJSApp.directive('DatePicker', function ($parse) {
         link: function ($scope, $ellement, $attr) {
             //http://eonasdan.github.io/bootstrap-datetimepicker/#events
 
-            debugger;
+            
             $($ellement).datetimepicker({
                 language: 'el',
                 defaultDate: moment(new Date($attr.date)).format(),
@@ -350,7 +350,7 @@ angularJSApp.directive('DatePicker', function ($parse) {
 
             $scope.$parent.$watch($attr.ngModel, function (value) {
 
-                debugger;
+                
                 if (new Date($($ellement).data("DateTimePicker").getDate()).toString() != new Date(value).toString()) {
                     $scope.SelectedDate = value;
                     $($ellement).data("DateTimePicker").setDate(moment(value).format());
@@ -394,17 +394,55 @@ angularJSApp.directive('dsTable', function ($parse) {
         },
         link: function ($scope, $ellement, $attr) {
 
+            if ($attr.queryurl != null)
+            {
+                $.ajax({
+                    type: 'POST',
+                    url: $attr.queryurl,
+                    data: JSON.stringify({ term: null, pager: {} }),
+                    contentType: "application/json",
+                    success: function (response) {                        
+                        $scope.$apply(function () {                            
+                            if ($attr.ngModel != null) $parse($attr.ngModel).assign($scope.$parent, response);                            
+                        });
+                    },
+                    //cache: false,
+                    async: true
+                });
+            }
         }
     }
 });
 
 angularJSApp.directive('dsPagination', function ($parse) {
     return {
-        restrict: 'AC',
-        replace: false,
-        scope: {            
-        },
-        link: function ($scope, $ellement, $attr) {
+        restrict: 'AC',        
+        link: function ($scope, $ellement, $attr, $controller) {
+            $scope.pageSelected = function ($index, $event) {
+                $event.preventDefault();                
+                var ngModelGet = $parse($attr.ngModel);
+                var ngModel = ngModelGet($scope);
+                var pager = ngModel.Pager; //.Pages[$index];
+
+                pager.PageNo = pager.Pages[$index];
+
+                $.ajax({
+                    type: 'POST',
+                    url: $attr.queryurl,
+                    data: JSON.stringify({ term: null, pager: pager }),
+                    contentType: "application/json",
+                    success: function (response) {                        
+                        $scope.$apply(function () {                            
+                            if ($attr.ngModel != null) {
+                                debugger;
+                                $parse($attr.ngModel).assign($scope, response);
+                            }
+                        });
+                    },
+                    //cache: false,
+                    //async: true
+                });                
+            }
         }
     }
 });

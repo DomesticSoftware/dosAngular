@@ -20,7 +20,7 @@
     </div>
     <div class="row">
         <div class="table-responsive">
-            <table class="dsTable table table-striped table-bordered table-hover table-condensed" ng-model="$tableInfo" data-ajaxurl="/Home/GetTableData">
+            <table class="dsTable table table-striped table-bordered table-hover table-condensed" ng-model="$tableInfo" data-queryurl="/Home/GetTableData">
                 <thead>
                     <tr>
                         <th colspan="2">
@@ -33,38 +33,27 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="items in $tableInfo.$data">
-                        <td>cell 1</td>
-                        <td>cell 2</td>
+                    <tr ng-repeat="items in $tableInfo.Data">
+                        <td>{{items.Id}}</td>
+                        <td>{{items.UserName}}</td>
 
                     </tr>
-                    <tr>
-                        <td>cell 1</td>
-                        <td>cell 2</td>
-
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="7"></td>
-                    </tr>
-                </tfoot>
+                </tbody>                
             </table>
-        </div>
-        <ul class="dsPagination pagination" ng-model="$tableInfo" data-ajaxurl="/Home/GetTableData">
-            <li ng-repeat="items in $tableInfo.$pager.$buttons">
-                <a href="#">&laquo;</a>
+        </div>        
+        <ul class="dsPagination pagination" ng-model="$tableInfo" data-queryurl="/Home/GetTableData">
+            <li ng-repeat="pageId in $tableInfo.Pager.Pages" class="{{pageId > 0 ? (pageId == $tableInfo.Pager.PageNo ? 'active' : '') : ''}} {{pageId > -20 && pageId < 0 ? ($tableInfo.Pager.PageNo == 1 ? 'disabled' : '') : '' }}">
+                <a href="#" ng-click="pageSelected($index, $event)">
+                    <span ng-if="pageId == -10">Αρχική Σελίδα</span>
+                    <span ng-if="pageId == -11">&laquo;</span>
+                    <span ng-if="pageId > 0">{{pageId}}</span>
+                    <span ng-if="pageId == -21">&raquo;</span>
+                    <span ng-if="pageId == -20">Τελευταία Σελίδα</span>
+                </a>
             </li>
-            <li><a href="#">&laquo;</a></li>
-            <li><a href="#">1</a></li>
-            <li><a href="#">2</a></li>
-            <li><a href="#">3</a></li>
-            <li><a href="#">4</a></li>
-            <li><a href="#">5</a></li>
-            <li><a href="#">&raquo;</a></li>
         </ul>
     </div>
-
+    {{$tableInfo}}
     <div class="row">
         <div class="btn-group">
             <button type="button" class="btn btn-default">1</button>
