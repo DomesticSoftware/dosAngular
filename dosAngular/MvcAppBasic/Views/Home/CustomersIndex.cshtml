@@ -42,12 +42,12 @@
             </table>
         </div>        
         <ul class="dsPagination pagination" ng-model="$tableInfo" data-queryurl="/Home/GetTableData">
-            <li ng-repeat="pageId in $tableInfo.Pager.Pages" class="{{pageId > 0 ? (pageId == $tableInfo.Pager.PageNo ? 'active' : '') : ''}} {{pageId > -20 && pageId < 0 ? ($tableInfo.Pager.PageNo == 1 ? 'disabled' : '') : '' }}">
+            <li ng-repeat="pageId in $tableInfo.Pager.Pages" class="{{pageId > 0 ? (pageId == $tableInfo.Pager.PageNo ? 'active' : '') : ''}} {{pageId > -20 && pageId < 0 ? ($tableInfo.Pager.PageNo == 1 ? 'disabled' : '') : '' }} {{pageId <= -20 ? ($tableInfo.Pager.PageNo == $tableInfo.Pager.PagesCount ? 'disabled' : '') : '' }}">
                 <a href="#" ng-click="pageSelected($index, $event)">
                     <span ng-if="pageId == -10">Αρχική Σελίδα</span>
-                    <span ng-if="pageId == -11">&laquo;</span>
+                    <span ng-if="pageId == -12">&laquo;</span>
                     <span ng-if="pageId > 0">{{pageId}}</span>
-                    <span ng-if="pageId == -21">&raquo;</span>
+                    <span ng-if="pageId == -22">&raquo;</span>
                     <span ng-if="pageId == -20">Τελευταία Σελίδα</span>
                 </a>
             </li>

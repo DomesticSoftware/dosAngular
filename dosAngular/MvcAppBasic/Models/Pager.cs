@@ -52,10 +52,11 @@ namespace MvcAppBasic.Models
                 PageNo = 1;
                 PageSize = 10;
                 VisiblePages = 5;
+                FirstVisiblePage = 1;
             }
         }
 
-        public DataTableInfo DoPaging(IEnumerable<object> data, IEnumerable<object> pagedData)
+        public DataTableInfo DoPaging(IEnumerable<object> data) //, IEnumerable<object> pagedData
         {
             Pages = new List<Int32>();
 
@@ -68,26 +69,102 @@ namespace MvcAppBasic.Models
                 PagesCount = (Int32)Math.Ceiling(RowsCount / (decimal)PageSize);
             }
 
-            Int32 PagesGroups = (Int32)Math.Ceiling(Pages.Count / (decimal)VisiblePages);
-            Int32 CurrentPageGroup = (Int32)((PageNo - 1) / (decimal)VisiblePages);
+            //Int32 PagesGroups = (Int32)Math.Ceiling(Pages.Count / (decimal)VisiblePages);
+            //Int32 CurrentPageGroup = (Int32)((PageNo - 1) / (decimal)VisiblePages);
 
-            FirstVisiblePage = (CurrentPageGroup * VisiblePages) + 1;
+            switch (PageNo)
+            {
+                case -10: //Είναι η Αρχική Σελίδα
+                    FirstVisiblePage = 1;
+                    PageNo = 1;
+                    break;
+                case -11: //Είναι η προηγούμενη σελίδα
+                    if (FirstVisiblePage > 1)
+                    {
+                        FirstVisiblePage--;
+                        PageNo = FirstVisiblePage;
+                        //LastVisiblePage = (FirstVisiblePage - 1) + VisiblePages;
+                    }
+                    break;
+                case -12: //Είναι η προηγούμενη ομάδα σελίδων
+                    // 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
+                    //  [7 8 9 10 11]
+
+                    if (FirstVisiblePage - VisiblePages > 0)
+                    {
+                        FirstVisiblePage -= VisiblePages;
+                    }
+                    else
+                        FirstVisiblePage = 1;
+
+                    PageNo = FirstVisiblePage;
+                    //LastVisiblePage = (FirstVisiblePage - 1) + VisiblePages;
+                    break;
+                
+            }
+
+            //FirstVisiblePage = (CurrentPageGroup * VisiblePages) + 1;
             LastVisiblePage = (FirstVisiblePage - 1) + VisiblePages;
+            if (PageNo > 0)
+            {
+                if (PageNo == LastVisiblePage && LastVisiblePage < PagesCount)
+                {
+                    FirstVisiblePage++;
+                    LastVisiblePage = (FirstVisiblePage - 1) + VisiblePages;
+                }
+
+                if (FirstVisiblePage > 1 && PageNo == FirstVisiblePage)
+                {
+                    FirstVisiblePage--;
+                    LastVisiblePage = (FirstVisiblePage - 1) + VisiblePages;
+                }
+            }
+
+            switch (PageNo)
+            {
+                case -20: //Είναι η Τελευταία Σελίδα
+                    LastVisiblePage = PagesCount;
+                    FirstVisiblePage = LastVisiblePage - VisiblePages;
+                    if (FirstVisiblePage < 1) FirstVisiblePage = 1;
+                    PageNo = LastVisiblePage;
+                    break;
+                case -21: //Είναι η επόμενη σελίδα
+                    FirstVisiblePage++;
+                    LastVisiblePage = (FirstVisiblePage - 1) + VisiblePages;
+                    PageNo = LastVisiblePage;
+                    break;
+                case -22: //Είναι η επόμενη ομάδα σελίδων
+                    // 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+                    //  [15 16 17 18 19]
+
+                    if (LastVisiblePage + VisiblePages < PagesCount)
+                    {
+                        LastVisiblePage += VisiblePages;
+                    }
+                    else
+                        LastVisiblePage = PagesCount;
+
+                    FirstVisiblePage = (LastVisiblePage - VisiblePages) + 1;
+                    if (FirstVisiblePage < 1) FirstVisiblePage = 1;
+
+                    PageNo = LastVisiblePage;
+                    break;
+            }
+
             if (LastVisiblePage > PagesCount) LastVisiblePage = PagesCount;
 
-
             Pages.Add(-10);
-            Pages.Add(-11);
+            Pages.Add(-12);
 
-            for (Int32 i = 0; i < (LastVisiblePage - FirstVisiblePage) + 1; i++)
+            for (Int32 i = FirstVisiblePage - 1; i < LastVisiblePage; i++)
             {
                 Pages.Add(i + 1);
             }
 
-            Pages.Add(-21);
+            Pages.Add(-22);
             Pages.Add(-20);
 
-            return new DataTableInfo() { Pager = this, Data = pagedData.ToList() };
+            return new DataTableInfo() { Pager = this, Data = data.Skip((PageNo - 1) * PageSize).Take(PageSize).ToList() };
         }
     }
 
