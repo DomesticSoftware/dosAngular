@@ -390,10 +390,28 @@ angularJSApp.directive('dsTable', function ($parse) {
         restrict: 'AC',
         replace: false,
         scope: {
-            LabelInfo: '@labelinfo',
+            //LabelInfo: '@labelinfo',
         },
         link: function ($scope, $ellement, $attr) {
-
+            
+            if ($attr.geturl != null)
+            {   
+                $.ajax({
+                    type: 'POST',
+                    url: $attr.geturl,
+                    data: JSON.stringify({ term: null, pager: { ClientPaging: true } } ),
+                    contentType: "application/json",
+                    success: function (response) {                        
+                        $scope.orginalData = response.Data;
+                        
+                        $scope.$apply(function () {
+                            if ($attr.ngModel != null) $parse($attr.ngModel).assign($scope.$parent, response);
+                        });
+                    },
+                    //cache: false,
+                    async: true
+                });
+            }
             if ($attr.queryurl != null)
             {
                 $.ajax({
@@ -416,32 +434,154 @@ angularJSApp.directive('dsTable', function ($parse) {
 
 angularJSApp.directive('dsPagination', function ($parse) {
     return {
-        restrict: 'AC',        
+        restrict: 'AC',
+        scope: {            
+        },
         link: function ($scope, $ellement, $attr, $controller) {
-            $scope.pageSelected = function ($index, $event) {
-                $event.preventDefault();                
+
+            //debugger;
+
+            //var ngModelGet = $parse($attr.ngModel);
+            //var ngModel = ngModelGet($scope.$parent);
+            //$scope.orginalData = ngModel.data;
+            //debugger;
+
+            $scope.$parent.pageSelected = function ($index, $event) {
+                $event.preventDefault();
                 var ngModelGet = $parse($attr.ngModel);
-                var ngModel = ngModelGet($scope);
+                var ngModel = ngModelGet($scope.$parent);
                 var pager = ngModel.Pager; //.Pages[$index];
+                $scope.orginalData = ngModel.Data;
 
                 pager.PageNo = pager.Pages[$index];
 
-                $.ajax({
-                    type: 'POST',
-                    url: $attr.queryurl,
-                    data: JSON.stringify({ term: null, pager: pager }),
-                    contentType: "application/json",
-                    success: function (response) {                        
-                        $scope.$apply(function () {                            
-                            if ($attr.ngModel != null) {
-                                debugger;
-                                $parse($attr.ngModel).assign($scope, response);
+                if (pager.ClientPaging == false) {
+                    $.ajax({
+                        type: 'POST',
+                        url: $attr.queryurl,
+                        data: JSON.stringify({ term: null, pager: pager }),
+                        contentType: "application/json",
+                        success: function (response) {
+                            $scope.$apply(function () {
+                                if ($attr.ngModel != null) {                                    
+                                    $parse($attr.ngModel).assign($scope.$parent, response);
+                                }
+                            });
+                        },
+                        //cache: false,
+                        //async: true
+                    });
+                }
+                else { //Client Paging
+                    debugger;
+                    //Int32 PagesGroups = (Int32)Math.Ceiling(Pages.Count / (decimal)VisiblePages);
+                    //Int32 CurrentPageGroup = (Int32)((PageNo - 1) / (decimal)VisiblePages);
+                    var tmpPageNo = pager.PageNo;
+                    switch (pager.PageNo)
+                    {
+                        case -10: //Είναι η Αρχική Σελίδα
+                            pager.FirstVisiblePage = 1;
+                            tmpPageNo = 1;
+                            break;
+                        case -11: //Είναι η προηγούμενη σελίδα
+                            if (pager.FirstVisiblePage > 1)
+                            {
+                                pager.FirstVisiblePage--;
+                                tmpPageNo = pager.FirstVisiblePage;
+                                //LastVisiblePage = (FirstVisiblePage - 1) + VisiblePages;
                             }
-                        });
-                    },
-                    //cache: false,
-                    //async: true
-                });                
+                            break;
+                        case -12: //Είναι η προηγούμενη ομάδα σελίδων
+                            // 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
+                            //  [7 8 9 10 11]
+
+                            if (pager.FirstVisiblePage - pager.VisiblePages > 0)
+                            {
+                                pager.FirstVisiblePage -= pager.VisiblePages;
+                            }
+                            else
+                                pager.FirstVisiblePage = 1;
+
+                            tmpPageNo = pager.FirstVisiblePage;
+                            //LastVisiblePage = (FirstVisiblePage - 1) + VisiblePages;
+                            break;
+                
+                    }
+            
+                    //FirstVisiblePage = (CurrentPageGroup * VisiblePages) + 1;
+                    pager.LastVisiblePage = (pager.FirstVisiblePage - 1) + pager.VisiblePages;
+                    if (pager.PageNo > 0)
+                    {
+                        if (pager.PageNo == pager.LastVisiblePage && pager.LastVisiblePage < pager.PagesCount)
+                        {
+                            pager.FirstVisiblePage++;
+                            pager.LastVisiblePage = (pager.FirstVisiblePage - 1) + pager.VisiblePages;
+                        }
+
+                        if (pager.FirstVisiblePage > 1 && pager.PageNo == pager.FirstVisiblePage)
+                        {
+                            pager.FirstVisiblePage--;
+                            pager.LastVisiblePage = (pager.FirstVisiblePage - 1) + pager.VisiblePages;
+                        }
+                    }
+
+                    switch (pager.PageNo)
+                    {
+                        case -20: //Είναι η Τελευταία Σελίδα
+                            pager.LastVisiblePage = pager.PagesCount;
+                            pager.FirstVisiblePage = pager.LastVisiblePage - pager.VisiblePages;
+                            if (pager.FirstVisiblePage < 1) pager.FirstVisiblePage = 1;
+                            tmpPageNo = pager.LastVisiblePage;
+                            break;
+                        case -21: //Είναι η επόμενη σελίδα
+                            pager.FirstVisiblePage++;
+                            pager.LastVisiblePage = (pager.FirstVisiblePage - 1) + pager.VisiblePages;
+                            tmpPageNo = pager.LastVisiblePage;
+                            break;
+                        case -22: //Είναι η επόμενη ομάδα σελίδων
+                            // 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+                            //  [15 16 17 18 19]
+
+                            if (pager.LastVisiblePage + pager.VisiblePages < pager.PagesCount)
+                            {
+                                pager.LastVisiblePage += pager.VisiblePages;
+                            }
+                            else
+                                pager.LastVisiblePage = pager.PagesCount;
+
+                            pager.FirstVisiblePage = (pager.LastVisiblePage - pager.VisiblePages) + 1;
+                            if (pager.FirstVisiblePage < 1) pager.FirstVisiblePage = 1;
+
+                            tmpPageNo = pager.LastVisiblePage;
+                            break;
+                    }
+
+                    if (pager.PageNo < 0)
+                        pager.PageNo = tmpPageNo;
+
+                    if (pager.LastVisiblePage > pager.PagesCount) pager.LastVisiblePage = pager.PagesCount;
+
+                    //$parse($attr.ngModel).assign($scope.$parent, response);
+                    //$scope.orginalData
+
+                    pager.Pages = [];
+                    pager.Pages.push(-10);
+                    pager.Pages.push(-12);
+
+                    for (var i = pager.FirstVisiblePage - 1; i < pager.LastVisiblePage; i++)
+                    {
+                        pager.Pages.push(i + 1);
+                    }
+
+                    pager.Pages.push(-22);
+                    pager.Pages.push(-20);
+
+                    debugger;
+                    var tmpData = $scope.orginalData.slice(pager.PageNo * pager.PageSize, (pager.PageNo * pager.PageSize) + pager.PageSize);
+
+                    ngModel.Data = tmpData;
+                    $parse($attr.ngModel).assign($scope.$parent, ngModel);
+                }
             }
         }
     }

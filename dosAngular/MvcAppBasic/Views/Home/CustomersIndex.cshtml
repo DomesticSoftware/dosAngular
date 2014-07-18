@@ -20,7 +20,7 @@
     </div>
     <div class="row">
         <div class="table-responsive">
-            <table class="dsTable table table-striped table-bordered table-hover table-condensed" ng-model="$tableInfo" data-queryurl="/Home/GetTableData">
+            <table class="dsTable table table-striped table-bordered table-hover table-condensed" ng-model="$tableInfo" data-geturl="/Home/GetTableData">
                 <thead>
                     <tr>
                         <th colspan="2">
@@ -38,10 +38,10 @@
                         <td>{{items.UserName}}</td>
 
                     </tr>
-                </tbody>                
+                </tbody>
             </table>
         </div>        
-        <ul class="dsPagination pagination" ng-model="$tableInfo" data-queryurl="/Home/GetTableData">
+        <ul class="dsPagination pagination" ng-model="$tableInfo" data-geturl="/Home/GetTableData">
             <li ng-repeat="pageId in $tableInfo.Pager.Pages" class="{{pageId > 0 ? (pageId == $tableInfo.Pager.PageNo ? 'active' : '') : ''}} {{pageId > -20 && pageId < 0 ? ($tableInfo.Pager.PageNo == 1 ? 'disabled' : '') : '' }} {{pageId <= -20 ? ($tableInfo.Pager.PageNo == $tableInfo.Pager.PagesCount ? 'disabled' : '') : '' }}">
                 <a href="#" ng-click="pageSelected($index, $event)">
                     <span ng-if="pageId == -10">Αρχική Σελίδα</span>

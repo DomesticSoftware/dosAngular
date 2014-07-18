@@ -7,6 +7,7 @@ namespace MvcAppBasic.Models
 {
     public class Pager
     {
+        public Boolean ClientPaging { get; set; }
         /// <summary>
         /// Flag για το αν θα εκτελέσουμε το data.Count()
         /// </summary>
@@ -60,6 +61,7 @@ namespace MvcAppBasic.Models
         {
             Pages = new List<Int32>();
 
+
             if (DontRefreshCount == false)
             {
                 DontRefreshCount = true;
@@ -71,18 +73,18 @@ namespace MvcAppBasic.Models
 
             //Int32 PagesGroups = (Int32)Math.Ceiling(Pages.Count / (decimal)VisiblePages);
             //Int32 CurrentPageGroup = (Int32)((PageNo - 1) / (decimal)VisiblePages);
-
+            Int32 tmpPageNo = PageNo;
             switch (PageNo)
             {
                 case -10: //Είναι η Αρχική Σελίδα
                     FirstVisiblePage = 1;
-                    PageNo = 1;
+                    tmpPageNo = 1;
                     break;
                 case -11: //Είναι η προηγούμενη σελίδα
                     if (FirstVisiblePage > 1)
                     {
                         FirstVisiblePage--;
-                        PageNo = FirstVisiblePage;
+                        tmpPageNo = FirstVisiblePage;
                         //LastVisiblePage = (FirstVisiblePage - 1) + VisiblePages;
                     }
                     break;
@@ -97,12 +99,12 @@ namespace MvcAppBasic.Models
                     else
                         FirstVisiblePage = 1;
 
-                    PageNo = FirstVisiblePage;
+                    tmpPageNo = FirstVisiblePage;
                     //LastVisiblePage = (FirstVisiblePage - 1) + VisiblePages;
                     break;
                 
             }
-
+            
             //FirstVisiblePage = (CurrentPageGroup * VisiblePages) + 1;
             LastVisiblePage = (FirstVisiblePage - 1) + VisiblePages;
             if (PageNo > 0)
@@ -126,12 +128,12 @@ namespace MvcAppBasic.Models
                     LastVisiblePage = PagesCount;
                     FirstVisiblePage = LastVisiblePage - VisiblePages;
                     if (FirstVisiblePage < 1) FirstVisiblePage = 1;
-                    PageNo = LastVisiblePage;
+                    tmpPageNo = LastVisiblePage;
                     break;
                 case -21: //Είναι η επόμενη σελίδα
                     FirstVisiblePage++;
                     LastVisiblePage = (FirstVisiblePage - 1) + VisiblePages;
-                    PageNo = LastVisiblePage;
+                    tmpPageNo = LastVisiblePage;
                     break;
                 case -22: //Είναι η επόμενη ομάδα σελίδων
                     // 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
@@ -147,9 +149,12 @@ namespace MvcAppBasic.Models
                     FirstVisiblePage = (LastVisiblePage - VisiblePages) + 1;
                     if (FirstVisiblePage < 1) FirstVisiblePage = 1;
 
-                    PageNo = LastVisiblePage;
+                    tmpPageNo = LastVisiblePage;
                     break;
             }
+
+            if (PageNo < 0)
+                PageNo = tmpPageNo;
 
             if (LastVisiblePage > PagesCount) LastVisiblePage = PagesCount;
 
@@ -163,8 +168,8 @@ namespace MvcAppBasic.Models
 
             Pages.Add(-22);
             Pages.Add(-20);
-
-            return new DataTableInfo() { Pager = this, Data = data.Skip((PageNo - 1) * PageSize).Take(PageSize).ToList() };
+            
+            return new DataTableInfo() { Pager = this, Data = ClientPaging ? data.ToList() : data.Skip((PageNo - 1) * PageSize).Take(PageSize).ToList() };
         }
     }
 
