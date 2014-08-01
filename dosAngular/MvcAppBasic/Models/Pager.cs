@@ -168,8 +168,10 @@ namespace MvcAppBasic.Models
 
             Pages.Add(-22);
             Pages.Add(-20);
-            
-            return new DataTableInfo() { Pager = this, Data = ClientPaging ? data.ToList() : data.Skip((PageNo - 1) * PageSize).Take(PageSize).ToList() };
+
+            var pagedData = data.Skip((PageNo - 1) * PageSize).Take(PageSize).ToList();
+
+            return new DataTableInfo() { Pager = this, Data = pagedData, AllData = ClientPaging ? data.ToList() : pagedData };
         }
     }
 
@@ -192,5 +194,6 @@ namespace MvcAppBasic.Models
     {
         public Pager Pager { get; set; }
         public IEnumerable<object> Data { get; set; }
+        public IEnumerable<object> AllData { get; set; }
     }
 }

@@ -402,11 +402,11 @@ angularJSApp.directive('dsTable', function ($parse) {
                     data: JSON.stringify({ term: null, pager: { ClientPaging: true } } ),
                     contentType: "application/json",
                     success: function (response) {                        
-                        $scope.orginalData = response.Data;
-                        
-                        $scope.$apply(function () {
+                        $scope.orginalData = response.AllData;                        
+                        debugger;
+                        //$scope.$apply(function () {
                             if ($attr.ngModel != null) $parse($attr.ngModel).assign($scope.$parent, response);
-                        });
+                        //});
                     },
                     //cache: false,
                     async: true
@@ -433,25 +433,36 @@ angularJSApp.directive('dsTable', function ($parse) {
 });
 
 angularJSApp.directive('dsPagination', function ($parse) {
+    
+
     return {
         restrict: 'AC',
+        require: 'ngModel',
         scope: {            
         },
-        link: function ($scope, $ellement, $attr, $controller) {
+        link: function ($scope, $ellement, $attr, $controller, $ngModel) {
 
             //debugger;
 
             //var ngModelGet = $parse($attr.ngModel);
             //var ngModel = ngModelGet($scope.$parent);
             //$scope.orginalData = ngModel.data;
-            //debugger;
 
-            $scope.$parent.pageSelected = function ($index, $event) {
-                $event.preventDefault();
-                var ngModelGet = $parse($attr.ngModel);
-                var ngModel = ngModelGet($scope.$parent);
-                var pager = ngModel.Pager; //.Pages[$index];
-                $scope.orginalData = ngModel.Data;
+            debugger;
+            var ngModelGet = $parse($attr.ngModel);
+            var ngModel = ngModelGet($scope.$parent);
+            var pager = ngModel.Pager; //.Pages[$index];
+            $scope.pager = pager;
+
+            $scope.$parent.pageSelected = function ($index, $event, ignoreModel) {
+                if ($event != null)
+                    $event.preventDefault();
+
+                debugger;
+                //$scope.pager = pager;
+                pager.PageSize = parseInt(pager.PageSize);
+
+                if ($scope.orginalData == null) $scope.orginalData = ngModel.AllData;
 
                 pager.PageNo = pager.Pages[$index];
 
@@ -473,7 +484,6 @@ angularJSApp.directive('dsPagination', function ($parse) {
                     });
                 }
                 else { //Client Paging
-                    debugger;
                     //Int32 PagesGroups = (Int32)Math.Ceiling(Pages.Count / (decimal)VisiblePages);
                     //Int32 CurrentPageGroup = (Int32)((PageNo - 1) / (decimal)VisiblePages);
                     var tmpPageNo = pager.PageNo;
@@ -575,14 +585,45 @@ angularJSApp.directive('dsPagination', function ($parse) {
 
                     pager.Pages.push(-22);
                     pager.Pages.push(-20);
+                    
+                    
+                    ngModel.Data = $scope.orginalData.slice((pager.PageNo - 1) * pager.PageSize, ((pager.PageNo - 1) * pager.PageSize) + pager.PageSize);
+                    
 
-                    debugger;
-                    var tmpData = $scope.orginalData.slice(pager.PageNo * pager.PageSize, (pager.PageNo * pager.PageSize) + pager.PageSize);
-
-                    ngModel.Data = tmpData;
-                    $parse($attr.ngModel).assign($scope.$parent, ngModel);
+                    if (!ignoreModel || ignoreModel == 'unefined')
+                        $parse($attr.ngModel).assign($scope.$parent, ngModel);
                 }
             }
+            
+            //$scope.$watch(function () {
+            //    debugger;
+            //    return $attr.ngModel.$modelValue;
+
+            //}, function (newValue) {
+            //    debugger;
+            //    console.log(newValue);
+            //});
+
+            $scope.$parent.$watch('$tableInfo.Pager.PageSize', function (value) {
+                debugger;
+                //alert(value);
+                //debugger;
+                $scope.pager.PagesCount = Math.ceil($scope.pager.RowsCount / $scope.pager.PageSize);
+                $scope.$parent.pageSelected($scope.pager.PageNo, null);
+                //    //$parse($attr.ngModel).assign($scope.$parent, ngModel);
+            });
+
+            
+            //debugger;
+            //debugger;
+            //$scope.$parent.pageSelected(0, null);
+            //if ($scope.pager != 'undefined')
+            //    if ($scope.pager.ClientPaging == true) {
+            //        debugger;
+            //        $scope.$parent.pageSelected(0, null);
+            //    }
+
+            //debugger;
         }
     }
 });
